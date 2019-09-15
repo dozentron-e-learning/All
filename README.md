@@ -18,3 +18,15 @@ docker-compose up --build
 You have to run `./rabbitmq-vhosts.sh` once.
 
 You may need to pull the docker images for the auth and user services manually using `docker pull`.
+
+To add more repositories use:
+
+```bash
+git submodule add -b master <repo-url> <directory name>
+```
+
+To update the submodules to the current version use:
+
+```bash
+git submodule update --remote
+```

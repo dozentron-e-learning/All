@@ -1,0 +1,20 @@
+
+omniauth:
+  providers:
+    developer:
+      enabled: true
+      name: Developer Access
+      icon: 'database'
+      color: '#666'
+
+    identity:
+      enabled: true
+      name: 'Good damn old Mail/Password Login'
+      color: '#00796b'
+      icon: 'login'
+      uid_field: 'username'
+      fields:
+        - email
+        - first_name
+        - last_name
+        - username

@@ -1,2 +1,5 @@
 compose/auth.env
 compose/user.env
+
+compose/volumes/exercise_uploads
+compose/volumes/submission_uploads

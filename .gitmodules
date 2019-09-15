@@ -1,0 +1,24 @@
+[submodule "SubmissionService"]
+	path = SubmissionService
+	url = git@github.com:dozentron-e-learning/SubmissionService.git
+	branch = master
+[submodule "ResultService"]
+	path = ResultService
+	url = git@github.com:dozentron-e-learning/ResultService.git
+	branch = master
+[submodule "ExerciseService"]
+	path = ExerciseService
+	url = git@github.com:dozentron-e-learning/ExerciseService.git
+	branch = master
+[submodule "JavaExerciseService"]
+	path = JavaExerciseService
+	url = git@github.com:dozentron-e-learning/JavaExerciseService.git
+	branch = master
+[submodule "UIService"]
+	path = UIService
+	url = git@github.com:dozentron-e-learning/UIService.git
+	branch = master
+[submodule "http-prompt-scripts"]
+	path = http-prompt-scripts
+	url = git@github.com:dozentron-e-learning/http-prompt-scripts.git
+	branch = master

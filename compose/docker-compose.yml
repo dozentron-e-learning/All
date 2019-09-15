@@ -53,7 +53,7 @@ services:
       - user
       - rabbitmq
     volumes:
-      - ../volumes/auth_config/settings.local.yml:/config.yml
+      - ./volumes/auth_config/settings.local.yml:/config.yml
     env_file:
       - auth.env
     restart: always
@@ -73,7 +73,7 @@ services:
   # Here start my own services
   java_exercise:
     build:
-      context: ../../JavaExerciseService
+      context: ../JavaExerciseService
     image: java_exercise
     restart: always
     depends_on:
@@ -93,8 +93,8 @@ services:
 
   java_exercise_worker_execute:
     build:
-      context: ../../JavaExerciseService
-      dockerfile: ../../JavaExerciseService/DockerfileWorker
+      context: ../JavaExerciseService
+      dockerfile: DockerfileWorker
     image: java_exercise_worker
     restart: always
     depends_on:
@@ -108,8 +108,8 @@ services:
 
   java_exercise_worker_validate:
     build:
-      context: ../../JavaExerciseService
-      dockerfile: ../../JavaExerciseService/DockerfileWorker
+      context: ../JavaExerciseService
+      dockerfile: DockerfileWorker
     image: java_exercise_worker
     restart: always
     depends_on:
@@ -123,7 +123,7 @@ services:
 
   exercise:
     build:
-      context: ../../ExerciseService
+      context: ../ExerciseService
     image: exercise
     ports:
       - 3000:3000
@@ -134,7 +134,7 @@ services:
       - source: exercise_master_key
         target: master.key
     volumes:
-      - ../volumes/exercise_uploads:/application/uploads
+      - ./volumes/exercise_uploads:/application/uploads
     environment:
       - |
         JWT_PUBLIC_KEY=
@@ -151,7 +151,7 @@ services:
       - RAILS_LOG_TO_STDOUT
   result:
     build:
-      context: ../../ResultService
+      context: ../ResultService
     image: result
     ports:
       - 3002:3000
@@ -164,7 +164,7 @@ services:
 
   submission:
     build:
-      context: ../../SubmissionService
+      context: ../SubmissionService
     image: submission
     ports:
       - 3001:3000
@@ -175,7 +175,7 @@ services:
       - source: submission_master_key
         target: master.key
     volumes:
-      - ../volumes/submission_uploads:/application/uploads
+      - ./volumes/submission_uploads:/application/uploads
     environment:
       - MONGO_HOST=mongo:27017
       - RAILS_LOG_TO_STDOUT
