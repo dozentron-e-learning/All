@@ -1,0 +1,74 @@
+version: '3'
+
+volumes:
+  db_auth:
+  db_user:
+
+services:
+  ingress_traefik:
+    image: traefik
+    ports:
+      - "8080:8080"     # The HTTP port
+      - "8443:8443"
+      - "8081:8081" # The Web UI (enabled by --api)
+    volumes:
+      - ./traefik/rules/:/rules/
+      - ./traefik/config.toml:/etc/traefik/traefik.toml
+      - ./certs/:/certs/
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+
+    labels:
+      - "de.thm.mni.gildamesh.name=traefik_proxy"
+    restart: unless-stopped
+
+  db_auth:
+    image: "mongo:3.4"
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    volumes:
+      - db_auth:/data/db
+    labels:
+      - "de.thm.mni.gildamesh.name=db_auth"
+      - "traefik.enable=false"
+
+  db_user:
+    image: "mongo:3.4"
+    restart: on-failure
+    volumes:
+      - db_user:/data/db
+    labels:
+      - "de.thm.mni.gildamesh.name=db_user"
+      - "traefik.enable=false"
+
+  services_user:
+    build:
+      context: ../services.user
+    image: mhpp11/services-user:0.0.1
+    ports:
+      - "3011:3000"
+    depends_on:
+      - db_user
+    environment:
+      - RAILS_ENV=production
+      - RAILS_MASTER_KEY=ee58f8f3dfb3b3fd40391087bfd38c4e
+      - MONGO_HOST=db_user
+    labels:
+      - "de.thm.mni.gildamesh.name=services_user"
+      - "traefik.frontend.rule=PathPrefix:/api/v{version:[0-9]+}/users"
+
+  services_auth:
+    build:
+      context: ../services.auth
+    image: mhpp11/services-auth:0.0.1
+    ports:
+      - "3012:3000"
+    depends_on:
+      - db_user
+    environment:
+      - RAILS_ENV=production
+      - RAILS_MASTER_KEY=f84a1e93cf144b98ded39b233d03b60f
+      - MONGO_HOST=db_user
+    labels:
+      - "de.thm.mni.gildamesh.name=services_auth"
+      - "traefik.frontend.rule=PathPrefix:/api/v{version:[0-9]+}/auths"

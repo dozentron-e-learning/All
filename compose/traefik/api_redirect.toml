@@ -1,0 +1,13 @@
+[backends]
+  [backends.api_redirect]
+    [backends.api_redirect.servers]
+      [backends.api_redirect.servers.s0]
+        url = "http://localhost:8081"
+
+[frontends]
+  [frontends.api_redirect]
+    entryPoints = ["https"]
+    backend = "api_redirect"
+  [frontends.api_redirect.routes]
+      [frontends.api_redirect.routes.r0]
+        rule = "PathPrefixStrip:/traefik"

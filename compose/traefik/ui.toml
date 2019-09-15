@@ -1,0 +1,14 @@
+[backends]
+  [backends.gildamesh_ui]
+    [backends.gildamesh_ui.servers]
+      [backends.gildamesh_ui.servers.s0]
+        url = "http://172.17.0.1:3000"
+
+[frontends]
+  [frontends.gildamesh_ui]
+    entryPoints = ["https", "http"]
+    backend = "gildamesh_ui"
+    passHostHeader = true
+  [frontends.gildamesh_ui.routes]
+    [frontends.gildamesh_ui.routes.r0]
+      rule = "PathPrefix:/"

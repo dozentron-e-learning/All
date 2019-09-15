@@ -1,0 +1,32 @@
+defaultEntryPoints = ["http", "https"]
+logLevel = "WARN"
+
+[entryPoints]
+  [entryPoints.mongo]
+  address = ":27017"
+  [entryPoints.http]
+  address = ":8080"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":8443"
+  compress = true
+  [entryPoints.https.tls]
+    [[entryPoints.https.tls.certificates]]
+      certFile = "/certs/localhost.cert"
+      keyFile = "/certs/localhost.key"
+  [entryPoints.traefik]
+  address = ":8081"
+
+[docker]
+  endpoint = "unix:///var/run/docker.sock"
+  watch = true
+
+[api]
+  entryPoint = "traefik"
+  dashboard = true
+  debug = true
+
+[file]
+  directory = "/rules"
+  watch = true

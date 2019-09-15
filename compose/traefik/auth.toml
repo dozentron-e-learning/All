@@ -1,0 +1,14 @@
+[backends]
+  [backends.gildamesh_auth]
+    [backends.gildamesh_auth.servers]
+      [backends.gildamesh_auth.servers.s0]
+        url = "http://172.17.0.1:3010"
+
+[frontends]
+  [frontends.gildamesh_auth]
+    entryPoints = ["https", "http"]
+    backend = "gildamesh_auth"
+    passHostHeader = true
+  [frontends.gildamesh_auth.routes]
+      [frontends.gildamesh_auth.routes.r0]
+        rule = "PathPrefix:/api/v{version:[0-9]+}/auths"
