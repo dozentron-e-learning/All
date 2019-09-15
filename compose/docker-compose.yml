@@ -1,0 +1,189 @@
+version: '3.1'
+
+secrets:
+  java_exercise_master_key:
+    file: ../JavaExerciseService/config/master.key
+  exercise_master_key:
+    file: ../ExerciseService/config/master.key
+  result_master_key:
+    file: ../ResultService/config/master.key
+  submission_master_key:
+    file: ../SubmissionService/config/master.key
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_db:/data/db
+  mongoex:
+    image: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+    ports:
+      - "8081:8081"
+  traefik:
+    image: traefik
+    volumes:
+      - "$PWD/../traefik.toml:/etc/traefik/traefik.toml"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports: 
+      - 8080:8080
+      - 80:80
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_config:/etc/rabbitmq/
+
+  # Auth and User
+  auth:
+    image: hobbypunk90/mt-services-auth
+    depends_on:
+      - user
+      - rabbitmq
+    volumes:
+      - ../volumes/auth_config/settings.local.yml:/config.yml
+    env_file:
+      - auth.env
+    restart: always
+    ports:
+      - 3010:3000
+  user:
+    image: hobbypunk90/mt-services-user
+    depends_on: 
+      - mongo
+      - rabbitmq
+    env_file:
+      - user.env
+    restart: always
+    ports:
+      - 3011:3000
+  
+  # Here start my own services
+  java_exercise:
+    build:
+      context: ../../JavaExerciseService
+    image: java_exercise
+    restart: always
+    depends_on:
+      - rabbitmq
+      - exercise
+      - submission
+    secrets:
+      - source: java_exercise_master_key
+        target: master.key
+    environment:
+      - REDIS_URL=redis:6379
+      - EXERCISE_URL=http://exercise:3000
+      - SUBMISSION_URL=http://submission:3000
+      - RESULT_URL=http://result:3000
+      - RABBITMQ_HOST=rabbitmq
+      - RAILS_LOG_TO_STDOUT
+
+  java_exercise_worker_execute:
+    build:
+      context: ../../JavaExerciseService
+      dockerfile: ../../JavaExerciseService/DockerfileWorker
+    image: java_exercise_worker
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - QUEUE=plugin_java_execute
+      - REDIS_URL=redis:6379
+      - EXERCISE_URL=http://exercise:3000
+      - SUBMISSION_URL=http://submission:3000
+      - RESULT_URL=http://result:3000
+
+  java_exercise_worker_validate:
+    build:
+      context: ../../JavaExerciseService
+      dockerfile: ../../JavaExerciseService/DockerfileWorker
+    image: java_exercise_worker
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - QUEUE=plugin_java_validate
+      - REDIS_URL=redis:6379
+      - EXERCISE_URL=http://exercise:3000
+      - SUBMISSION_URL=http://submission:3000
+      - RESULT_URL=http://result:3000
+
+  exercise:
+    build:
+      context: ../../ExerciseService
+    image: exercise
+    ports:
+      - 3000:3000
+    restart: always
+    depends_on:
+      - rabbitmq
+    secrets:
+      - source: exercise_master_key
+        target: master.key
+    volumes:
+      - ../volumes/exercise_uploads:/application/uploads
+    environment:
+      - |
+        JWT_PUBLIC_KEY=
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx6LL++1mUz0TYwMeFC2L
+        4uJwF+0nzhB+7P7Gt/i4HOiad8gbiJg4/URPZezdp5taJ3P24jJYZByujqedUtSd
+        XSyxWGtgQqsoMWd5BVvLziNCnoUK1cgGpUGfKhYDLmWWLeFUL/y4Ra8JxZO4UP19
+        13UEfB/sLDJsc6hHpd8wzEdRmNcsKEhEXxDQJatte3uKPOSTa+5cO4dM4wmB8Dj7
+        fKoYq2pm9D5bBhgCAk2DuZJzoGd2YJY5GMGuPfGwJEhyvcujvOFDD0RkRZn2OBwq
+        999OsGOab1jVAgkupkXFtCH3X3reZVok/0cRzXT3iLfz5zVm8PJVbod1SuFq2K7x
+        TQIDAQAB
+        -----END PUBLIC KEY-----
+      - MONGO_HOST=mongo:27017
+      - RAILS_LOG_TO_STDOUT
+  result:
+    build:
+      context: ../../ResultService
+    image: result
+    ports:
+      - 3002:3000
+    restart: always
+    secrets:
+      - source: result_master_key
+        target: master.key
+    environment:
+      - MONGO_HOST=mongo:27017
+
+  submission:
+    build:
+      context: ../../SubmissionService
+    image: submission
+    ports:
+      - 3001:3000
+    restart: always
+    depends_on:
+      - rabbitmq
+    secrets:
+      - source: submission_master_key
+        target: master.key
+    volumes:
+      - ../volumes/submission_uploads:/application/uploads
+    environment:
+      - MONGO_HOST=mongo:27017
+      - RAILS_LOG_TO_STDOUT
+
+volumes:
+    mongo_db:
+        external: false
+    rabbitmq_data:
+        external: false
+    rabbitmq_config:
+        external: false
